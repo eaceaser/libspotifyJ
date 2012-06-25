@@ -41,6 +41,32 @@ public final class Constants {
 	public static final int ERROR_INVALID_ARGUMENT 				= 40;
 	public static final int ERROR_SYSTEM_FAILURE 				= 41;
 	
+	/* Corresponds to sp_connectionstate */
+	public static final int CONNECTIONSTATE_LOGGED_OUT 			= 0;
+	public static final int CONNECTIONSTATE_LOGGED_IN 			= 1;
+	public static final int CONNECTIONSTATE_DISCONNECTED 		= 2;
+	public static final int CONNECTIONSTATE_UNDEFINED 			= 3;
+	public static final int CONNECTIONSTATE_OFFLINE 			= 4;
+	
+	/* Corresponds to sp_bitrate */
+	public static final int BITRATE_160k 	= 0;
+	public static final int BITRATE_320k 	= 1;
+	public static final int BITRATE_96k 	= 2;
+	
+	/* Corresponds to sp_connection_type */
+	public static final int CONNECTION_TYPE_UNKNOWN 			= 0;
+	public static final int CONNECTION_TYPE_NONE 				= 1;
+	public static final int CONNECTION_TYPE_MOBILE 				= 2;
+	public static final int CONNECTION_TYPE_MOBILE_ROAMING 		= 3;
+	public static final int CONNECTION_TYPE_WIFI 				= 4;
+	public static final int CONNECTION_TYPE_WIRED 				= 5;
+	
+	/* Corresponds to sp_connection_rules */
+	public static final int CONNECTION_RULES_NETWORK 					= (0x1);
+	public static final int CONNECTION_RULES_NETWORK_IF_ROAMIN 			= (0x2);
+	public static final int CONNECTION_RULES_ALLOW_SYNC_OVER_MOBILE 	= (0x4);
+	public static final int CONNECTION_RULES_ALLOW_SYNC_OVER_WIFE 		= (0x8);
+	
 	private Constants() {}
 	
 }
