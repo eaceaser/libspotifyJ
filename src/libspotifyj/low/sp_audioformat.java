@@ -1,4 +1,4 @@
-package low;
+package libspotifyj.low;
 
 import com.sun.jna.Structure;
 
