@@ -6,12 +6,19 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import libspotifyj.events.SessionEventArgs;
+import libspotifyj.events.SessionEventHandler;
+import libspotifyj.events.SpotifyEventHandler;
+import libspotifyj.events.SpotifyEventItem;
 import libspotifyj.low.SpotifyJ;
+import libspotifyj.low.sp_audioformat;
 import libspotifyj.low.sp_session;
 import libspotifyj.low.sp_session_callbacks;
 import libspotifyj.low.sp_session_config;
@@ -30,20 +37,52 @@ public class Session {
 	private Condition userLoggedIn;
 	private int loginCode = Constants.ERROR_IS_LOADING;
 	
+	/* Logout data */
+	private Lock logoutLock = new ReentrantLock();
+	private Condition userLoggedOut;
+	
 	/* Main thread data */
 	private Thread mainThread;
 	private Lock mainThreadLock = new ReentrantLock();
 	private Condition mainThreadShouldProcess = mainThreadLock.newCondition();
+	
+	/* Event thread data */
+	private Thread eventThread;
+	private Lock eventThreadLock = new ReentrantLock();
+	private Condition eventThreadShouldProcess = eventThreadLock.newCondition();
+	private Queue<SpotifyEventItem> eventItemQueue = new LinkedList<SpotifyEventItem>();
+	
+	/* Spotify event handlers */
+	private SpotifyEventHandler logMessageHandler;
+	private SpotifyEventHandler loginHandler;
+	private SpotifyEventHandler logoutHandler;
 	
 	private Session(char[] applicationKey, String cacheLocation, String settingsLocation, String userAgent) throws SpotifyException {
 		sp_session_config config = new sp_session_config();
 		sp_session_callbacks callbacks = new sp_session_callbacks();
 		
 		synchronized (SpotifyJ.lock) {
-			//TODO: callbacks
-			callbacks.log_message = new LogMessageCallback();
-			callbacks.notify_main_thread = new NotifyMainThreadCallback();
 			callbacks.logged_in = new LoggedInCallBack();
+			callbacks.logged_out = new LoggedOutCallback();
+			callbacks.metadata_updated = new MetadataUpdatedCallback();
+			callbacks.connection_error = new ConnectionErrorCallback();
+			callbacks.message_to_user = new MessageToUserCallback();
+			callbacks.notify_main_thread = new NotifyMainThreadCallback();
+			callbacks.music_delivery = new MusicDeliveryCallback();
+			callbacks.play_token_lost = new PlayTokenLostCallback();
+			callbacks.log_message = new LogMessageCallback();
+			callbacks.end_of_track = new EndOfTrackCallback();
+			callbacks.streaming_error = new StreamingErrorCallback();
+			callbacks.userinfo_updated = new UserInfoUpdatedCallback();
+			callbacks.start_playback = new StartPlaybackCallback();
+			callbacks.stop_playback = new StopPlaybackCallback();
+			callbacks.get_audio_buffer_stats = new GetAudioBufferStatsPlayback();
+			callbacks.offline_status_updated = new OfflineStatusUpdatesCallback();
+			callbacks.offline_error = new OfflineErrorCallback();
+			callbacks.credentials_blob_updated = new CredentialsBlobUpdatedCallback();
+			callbacks.connectionstate_updated = new ConnectionStateUpdatedCallback();
+			callbacks.scrobble_error = new ScrobbleErrorCallback();
+			callbacks.private_session_mode_changed = new PrivateSessionModeChangedCallback();
 		}
 		
 		PointerByReference sessionPbr = new PointerByReference();
@@ -69,13 +108,14 @@ public class Session {
                                         
         mainThread = new MainThread();
         mainThread.start();
+        eventThread = new EventThread();
+        eventThread.start();
 	}
 	
-	/* Public methods */
 	public static Session createInstance(char[] applicationKey, String cacheLocation, String settingsLocation, String userAgent) throws SpotifyException {
 		synchronized (SpotifyJ.lock) {
 			if (sessions.size() > 0) {
-				throw new IllegalStateException("Only one instance of Session is allowed");
+				throw new IllegalStateException("Only one instance of a Spotify session is allowed");
 			} else {
 				Session session = new Session(applicationKey, cacheLocation, settingsLocation, userAgent);
 				sessions.put(session.sessionPtr, session);
@@ -93,34 +133,77 @@ public class Session {
     		return Constants.CONNECTIONSTATE_UNDEFINED;
     	}
     }
+    
+    public User getCurrentUser() {
+    	synchronized (SpotifyJ.lock) {
+    		return new User(libspotify.sp_session_user(sessionPtr));
+    	}
+    }
 	
     public int login(String username, String password, long ms) {
-    	synchronized (SpotifyJ.lock) {
-    		if (userLoggedIn != null) {
-    			return Constants.ERROR_IS_LOADING;
-    		} else {
-    			int code = libspotify.sp_session_login(sessionPtr, username, password, false, null);
-    			if (code != Constants.ERROR_OK)
-    				return code;
-    			else
-    				userLoggedIn = loginLock.newCondition();
+    	if (userLoggedIn != null) {
+    		return Constants.ERROR_IS_LOADING;
+    	} else {
+    		int code = Constants.ERROR_OK;
+    		synchronized (SpotifyJ.lock) {
+    			code = libspotify.sp_session_login(sessionPtr, username, password, false, null);
     		}
-    		
-    		boolean signal = false;
-
-    		try {
-        		loginLock.lock();
-    			signal = userLoggedIn.await(ms, TimeUnit.MILLISECONDS);
-    			userLoggedIn = null;
-    			loginCode = Constants.ERROR_IS_LOADING;
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			} finally {
-				loginLock.unlock();
-			}
-			
-			return signal ? loginCode : Constants.ERROR_OTHER_TRANSIENT;
+    		if (code != Constants.ERROR_OK)
+    			return code;
+    		else
+    			userLoggedIn = loginLock.newCondition();
     	}
+    	
+    	boolean wasInterrupted = false;
+
+    	try {
+        	loginLock.lock();
+        	wasInterrupted = userLoggedIn.await(ms, TimeUnit.MILLISECONDS);
+    		userLoggedIn = null;
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		} finally {
+			loginLock.unlock();
+		}
+		
+		return wasInterrupted ? loginCode : Constants.ERROR_OTHER_TRANSIENT;
+    }
+    
+    public void logout(long ms) {
+    	synchronized (SpotifyJ.lock) {
+    		if (getConnectionState() == Constants.CONNECTIONSTATE_LOGGED_IN) {
+    			int code = libspotify.sp_session_logout(sessionPtr);
+    			if (code != Constants.ERROR_OK)
+    				return;
+    			else
+        			userLoggedOut = logoutLock.newCondition();
+    		} else {
+    			return;
+    		}
+    	}
+    	    	
+    	try {
+    		logoutLock.lock();
+    		userLoggedOut.await(ms, TimeUnit.MILLISECONDS);
+    		userLoggedOut = null;
+    	} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+    	} finally {
+    		logoutLock.unlock();
+    	}
+    }
+    
+	/* Spotify event handler setters */
+    public void setLogMessageHandler(SessionEventHandler logMessageHandler) {
+    	this.logMessageHandler = logMessageHandler;
+    }
+    
+    public void setLoginHandler(SessionEventHandler loginHandler) {
+    	this.loginHandler = loginHandler;
+    }
+    
+    public void setLogoutHandler(SessionEventHandler logoutHandler) {
+    	this.logoutHandler = logoutHandler;
     }
 	
 	/* Threads */
@@ -149,18 +232,51 @@ public class Session {
     	}
 	}
 	
+	private class EventThread extends Thread {
+		public void run() {
+			Queue<SpotifyEventItem> workList = new LinkedList<SpotifyEventItem>();
+			
+			while (true) {
+				try {
+					eventThreadLock.lock();
+					while (eventItemQueue.isEmpty())
+						eventThreadShouldProcess.await();
+				
+					while (eventItemQueue.size() > 0)
+						workList.add(eventItemQueue.poll());
+
+					for (SpotifyEventItem item : workList)
+						item.processEvent();
+					
+					workList.clear();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				} finally {
+					eventThreadLock.unlock();
+				}
+			}
+		}
+	}
+		
 	/* Private methods */
 	private static Session getSession(sp_session sessionPtr) {
 		return sessions.get(sessionPtr);
+	}
+	
+	private void enqueueSpotifyEventItem(SpotifyEventItem item) {
+		eventThreadLock.lock();
+		eventItemQueue.offer(item);
+		eventThreadShouldProcess.signal();
+		eventThreadLock.unlock();
 	}
 	
     private byte[] toBytes(char[] key){
         byte[] b = new byte[key.length];
         for (int i = 0; i < key.length; i++){
             if (key[i] > 127)
-                b[i] = (byte)(key[i] - 256);
+                b[i] = (byte) (key[i] - 256);
             else
-                b[i] = (byte)key[i];
+                b[i] = (byte) key[i];
         }
         return b;
     }
@@ -172,7 +288,6 @@ public class Session {
 			if (s == null)
 				return;
 			
-			System.out.println("main");
 			try {
 				s.mainThreadLock.lock();
 				s.mainThreadShouldProcess.signal();
@@ -188,18 +303,42 @@ public class Session {
 			if (s == null)
 				return;
 			
-			System.out.println("logged_in() called");
 			if (s.getConnectionState() == Constants.CONNECTIONSTATE_LOGGED_IN && error == Constants.ERROR_OK) {
 				//TODO:
 			}
 			
-			if (s.userLoggedIn == null) {
-				//TODO
-			} else {
+			if (s.userLoggedIn != null) {
+				s.enqueueSpotifyEventItem(new SpotifyEventItem(s.loginHandler, s, new SessionEventArgs(error)));
+				s.loginLock.lock();
 				s.loginCode = error;
+				s.userLoggedIn.signal();
+				s.loginLock.unlock();
+			}
+		}
+	}
+	
+	private class LoggedOutCallback implements Callback {
+		public void callback(sp_session session) {
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			//TODO:
+			/*if (s.playlistContainter != null) {
+				
+			}*/
+			
+			if (s.userLoggedIn != null) {
 				s.loginLock.lock();
 				s.userLoggedIn.signal();
 				s.loginLock.unlock();
+			}
+			
+			if (s.userLoggedOut != null) {
+				s.enqueueSpotifyEventItem(new SpotifyEventItem(s.logoutHandler, s, new SessionEventArgs()));
+				s.logoutLock.lock();
+				s.userLoggedOut.signal();
+				s.logoutLock.unlock();
 			}
 		}
 	}
@@ -210,9 +349,109 @@ public class Session {
 			if (s == null)
 				return;
 			
-			//TODO
-			System.out.println("log_message() called:" + message);
-			//s.addEventItem(new JSEventItem(s.logMessageHandler, s, new JSSessionEventArgs(message)));
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.logMessageHandler, s, new SessionEventArgs(message)));
+		}
+	}
+	
+	private class MetadataUpdatedCallback implements Callback {
+		public void callback(sp_session session) {
+			System.out.println("metadata() called");
+		}
+	}
+	
+	private class ConnectionErrorCallback implements Callback {
+		public void callback(sp_session session, int error) {
+			System.out.println("conerror() called");
+		}
+	}
+	
+	private class MessageToUserCallback implements Callback {
+		public void callback(sp_session session, String message) {
+			System.out.println("msgtouser() called");
+		}
+	}
+	
+	private class MusicDeliveryCallback implements Callback {
+		public void callback(sp_session session, sp_audioformat format, Pointer frames, int num_frames) {
+			System.out.println("musicdelivery() called");
+		}
+	}
+	
+	private class PlayTokenLostCallback implements Callback {
+		public void callback(sp_session session) {
+			System.out.println("playtoken() called");
+		}
+	}
+	
+	private class EndOfTrackCallback implements Callback {
+		public void callback(sp_session session) {
+			System.out.println("endoftrack() called");
+		}
+	}
+	
+	private class StreamingErrorCallback implements Callback {
+		public void callback(sp_session session, int error) {
+			System.out.println("strerror() called");
+		}
+	}
+	
+	private class UserInfoUpdatedCallback implements Callback {
+		public void callback(sp_session session) {
+			System.out.println("usrinfo() called");
+		}
+	}
+	
+	private class StartPlaybackCallback implements Callback {
+		public void callback(sp_session session) {
+			System.out.println("startplayback() called");
+		}
+	}
+	
+	private class StopPlaybackCallback implements Callback {
+		public void callback(sp_session session) {
+			System.out.println("stopplayback() called");
+		}
+	}
+	
+	private class GetAudioBufferStatsPlayback implements Callback {
+		public void callback(sp_session session, PointerByReference stats) {
+			System.out.println("getaudiobuffer() called");
+		}
+	}
+	
+	private class OfflineStatusUpdatesCallback implements Callback {
+		public void callback(sp_session session) {
+			System.out.println("offlinestatus() called");
+		}
+	}
+	
+	private class OfflineErrorCallback implements Callback {
+		public void callback(sp_session session, int error) {
+			System.out.println("offlinerror() called");
+		}
+	}
+	
+	private class CredentialsBlobUpdatedCallback implements Callback {
+		public void callback(sp_session session, String blob) {
+			System.out.println("credblob() called");
+		}
+	}
+	
+	private class ConnectionStateUpdatedCallback implements Callback {
+		public void callback(sp_session session) {
+			System.out.println("connstate() called");
+		}
+	}
+	
+	private class ScrobbleErrorCallback implements Callback {
+		public void callback(sp_session session, int error) {
+			System.out.println("scrobberror() called");
+		}
+	}
+	
+	private class PrivateSessionModeChangedCallback implements Callback {
+		public void callback(sp_session session, boolean is_private) {
+			System.out.println("privatesession() called");
 		}
 	}
 
