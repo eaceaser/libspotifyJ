@@ -67,6 +67,39 @@ public final class Constants {
 	public static final int CONNECTION_RULES_ALLOW_SYNC_OVER_MOBILE 	= (0x4);
 	public static final int CONNECTION_RULES_ALLOW_SYNC_OVER_WIFE 		= (0x8);
 	
+	/* Corresponds to sp_linktype */
+	public static final int LINKTYPE_INVALID 		= 0;
+	public static final int LINKTYPE_TRACK 			= 1;
+	public static final int LINKTYPE_ALBUM 			= 2;
+	public static final int LINKTYPE_ARTIST 		= 3;
+	public static final int LINKTYPE_SEARCH 		= 4;
+	public static final int LINKTYPE_PLAYLIST 		= 5;
+	public static final int LINKTYPE_PROFILE 		= 6;
+	public static final int LINKTYPE_STARRED 		= 7;
+	public static final int LINKTYPE_LOCALTRACK 	= 8;
+	public static final int LINKTYPE_IMAGE 			= 9;
+	
+	/* Corresponds to sp_image_size */
+	public static final int IMAGE_SIZE_NORMAL 		= 0;
+	public static final int IMAGE_SIZE_SMALL 		= 1;
+	public static final int IMAGE_SIZE_LARGE 		= 2;
+	
+	/* Corresponds to sp_track_offline_status */
+	public static final int TRACK_OFFLINE_NO 				= 0;
+	public static final int TRACK_OFFLINE_WAITING 			= 1;
+	public static final int TRACK_OFFLINE_DOWNLOADING 		= 2;
+	public static final int TRACK_OFFLINE_DONE 				= 3;
+	public static final int TRACK_OFFLINE_ERROR 			= 4;
+	public static final int TRACK_OFFLINE_DONE_EXPIRED 		= 5;
+	public static final int TRACK_OFFLINE_LIMIT_EXPIRED 	= 6;
+	public static final int TRACK_OFFLINE_DONE_RESYNC 		= 7;
+	
+	/* Corresponds to sp_track_availability */
+	public static final int TRACK_AVAILABILITY_UNAVAILABLE 		= 0;
+	public static final int TRACK_AVAILABILITY_AVAILABLE 		= 1;
+	public static final int TRACK_AVAILABILITY_NOT_STREAMABLE 	= 2;
+	public static final int TRACK_AVAILABILITY_BANNED_BY_ARTIST = 3;
+	
 	private Constants() {}
 	
 }
