@@ -106,6 +106,10 @@ public final class Constants {
 	public static final int ALBUMTYPE_COMPILATION 	= 2;
 	public static final int ALBUMTYPE_UNKNOWN 		= 3;
 	
+	/* Corresponds to sp_search_type */
+	public static final int SEARCH_STANDARD = 0;
+	public static final int SEARCH_SUGGEST 	= 1;
+	
 	private Constants() {}
 	
 }

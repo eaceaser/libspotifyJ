@@ -133,7 +133,7 @@ public interface SpotifyJ extends Library {
 	void sp_artist_release(sp_artist artist);
 	
 	/* Search handling */
-	sp_search sp_search_create(sp_session session, String query, int track_offset, int track_count, int album_offset, int album_count, int artist_offset, int artist_count, int playlist_offset, int playlist_count, int search_type, Callback callback, Pointer userdata);
+	sp_search sp_search_create(sp_session session, String query, int track_offset, int track_count, int album_offset, int album_count, int artist_offset, int artist_count, int playlist_offset, int playlist_count, int search_type, Callback callback, int userdata);
 	boolean sp_search_is_loaded(sp_search search);
 	int sp_search_error(sp_search search);
 	int sp_search_num_tracks(sp_search search);

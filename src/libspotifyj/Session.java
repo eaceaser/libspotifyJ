@@ -19,6 +19,7 @@ import libspotifyj.events.SpotifyEventHandler;
 import libspotifyj.events.SpotifyEventItem;
 import libspotifyj.low.SpotifyJ;
 import libspotifyj.low.sp_audioformat;
+import libspotifyj.low.sp_search;
 import libspotifyj.low.sp_session;
 import libspotifyj.low.sp_session_callbacks;
 import libspotifyj.low.sp_session_config;
@@ -30,7 +31,7 @@ public class Session {
 	
 	/* Session data */
 	private static Map<sp_session, Session> sessions = new HashMap<sp_session, Session>();
-	private sp_session sessionPtr = new sp_session(Pointer.NULL);
+	sp_session sessionPtr = new sp_session(Pointer.NULL);
 	
 	/* Login data */
 	private Lock loginLock = new ReentrantLock();
@@ -56,6 +57,11 @@ public class Session {
 	private SpotifyEventHandler logMessageHandler;
 	private SpotifyEventHandler loginHandler;
 	private SpotifyEventHandler logoutHandler;
+	
+	/* State data */
+	private HashMap<Integer, Object> states = new HashMap<Integer, Object>();
+	private short internalStateCounter = 1;
+	private short userStateCounter = 1;
 	
 	private Session(char[] applicationKey, String cacheLocation, String settingsLocation, String userAgent) throws SpotifyException {
 		sp_session_config config = new sp_session_config();
@@ -197,6 +203,29 @@ public class Session {
     	return wasInterrupted ? Constants.ERROR_OK : Constants.ERROR_OTHER_TRANSIENT;
     }
     
+    public Search search(String query, int trackOffset, int trackCount, int albumOffset, int albumCount, int artistOffset, int artistCount, int playlistOffset, int playlistCount, int searchType, long timeout) {
+    	ReentrantLock lock = new ReentrantLock();
+    	Condition waitHandler = lock.newCondition();
+    	SyncResponseData data = new SyncResponseData(lock, waitHandler);
+    	    	
+    	int id = getInternalStateId();
+    	
+    	synchronized (SpotifyJ.lock) {
+    		states.put(id, data);
+    		
+    		if (libspotify.sp_search_create(sessionPtr, query, trackOffset, trackCount, 
+    				albumOffset, albumCount, artistOffset, artistCount, 
+    				playlistOffset, playlistCount, searchType, 
+    				new SearchCompleteCallback(), id) == null) {
+    			states.remove(id);
+    			return null;
+    		}
+    	}
+    	
+    	Search search = (Search) getSyncResponse(id, data, timeout);
+    	return search;
+    }
+    
 	/* Spotify event handler setters */
     public void setLogMessageHandler(SessionEventHandler logMessageHandler) {
     	this.logMessageHandler = logMessageHandler;
@@ -274,6 +303,46 @@ public class Session {
 		eventThreadLock.unlock();
 	}
 	
+	private int getUserStateId() {
+		int result;
+		synchronized (SpotifyJ.lock) {
+			result = userStateCounter++;
+		}
+		return result;
+	}
+	
+	private int getInternalStateId() {
+		int result;
+		synchronized (SpotifyJ.lock) {
+			result = internalStateCounter++;
+		}
+		return result;	
+	}
+	
+	private Object getSyncResponse(int id, SyncResponseData data, long timeout) {
+		 boolean wasInterrupted = false;
+		
+    	try {
+    		data.lock.lock();
+    		wasInterrupted = data.waitHandler.await(timeout, TimeUnit.MILLISECONDS);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		} finally {
+			data.lock.unlock();
+		}
+    	
+		synchronized (SpotifyJ.lock) {
+			try {
+				if (wasInterrupted && states.containsKey(id))
+					return states.get(id);
+				else
+					return null;
+			} finally {
+				states.remove(id);
+			}
+		}
+	}
+	
     private byte[] toBytes(char[] key){
         byte[] b = new byte[key.length];
         for (int i = 0; i < key.length; i++){
@@ -343,6 +412,26 @@ public class Session {
 				s.logoutLock.lock();
 				s.userLoggedOut.signal();
 				s.logoutLock.unlock();
+			}
+		}
+	}
+	
+	private class SearchCompleteCallback implements Callback {
+		public void callback(sp_search result, int userData) {
+			Search search = new Search(result);
+			Object state = states.get(userData);
+			
+			if (state != null && state instanceof SyncResponseData) {
+				states.put(userData, search);
+				ReentrantLock lock = ((SyncResponseData) state).lock;
+				Condition waitHandler = ((SyncResponseData) state).waitHandler;
+				
+				try {
+					lock.lock();
+					waitHandler.signal();
+				} finally {
+					lock.unlock();
+				}
 			}
 		}
 	}
@@ -456,6 +545,16 @@ public class Session {
 	private class PrivateSessionModeChangedCallback implements Callback {
 		public void callback(sp_session session, boolean is_private) {
 			System.out.println("privatesession() called");
+		}
+	}
+	
+	private class SyncResponseData {
+		ReentrantLock lock;
+		Condition waitHandler;
+		
+		SyncResponseData(ReentrantLock lock, Condition waitHandler) {
+			this.lock = lock;
+			this.waitHandler = waitHandler;
 		}
 	}
 
