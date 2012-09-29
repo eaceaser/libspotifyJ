@@ -137,6 +137,12 @@ public final class Constants {
 	public static final int PLAYLIST_OFFLINE_STATUS_DOWNLOADING = 2;
 	public static final int PLAYLIST_OFFLINE_STATUS_WAITING = 3;
 	
+	/* Corresponds to sp_playlist_type */
+	public static final int PLAYLIST_TYPE_PLAYLIST = 0;
+	public static final int PLAYLIST_TYPE_START_FOLDER = 1;
+	public static final int PLAYLIST_TYPE_END_FOLDER = 2;
+	public static final int PLAYLIST_TYPE_PLACEHOLDER = 3;
+	
 	private Constants() {}
 	
 }

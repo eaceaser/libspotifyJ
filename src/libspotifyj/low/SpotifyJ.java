@@ -235,4 +235,23 @@ public interface SpotifyJ extends Library {
 	int sp_playlist_add_ref(sp_playlist playlist);
 	int sp_playlist_release(sp_playlist playlist);
 	
+	/* Playlist container handling */
+	int sp_playlistcontainer_add_callbacks(sp_playlistcontainer pc, sp_playlistcontainer_callbacks callbacks, int userdata);
+	int sp_playlistcontainer_num_playlists(sp_playlistcontainer pc);
+	boolean sp_playlistcontainer_is_loaded(sp_playlistcontainer pc);
+	sp_playlist sp_playlistcontainer_playlist(sp_playlistcontainer pc, int index);
+	int sp_playlistcontainer_playlist_type(sp_playlistcontainer pc, int index);
+	int sp_playlistcontainer_folder_name(sp_playlistcontainer pc, int index, Memory buffer, int buffer_size);
+	long sp_playlistcontainer_playlist_folder_id(sp_playlistcontainer pc, int index);
+	sp_playlist sp_playlistcontainer_add_new_playlist(sp_playlistcontainer pc, String name);
+	sp_playlist sp_playlistcontainer_add_playlist(sp_playlistcontainer pc, sp_link link);
+	int sp_playlistcontainer_remove_playlist(sp_playlistcontainer pc, int index);
+	int sp_playlistcontainer_move_playlist(sp_playlistcontainer pc, int index, int new_position, boolean dry_run);
+	int sp_playlistcontainer_add_folder(sp_playlistcontainer pc, int index, String name);
+	sp_user sp_playlistcontainer_owner(sp_playlistcontainer pc);
+	int sp_playlistcontainer_add_ref(sp_playlistcontainer pc);
+	int sp_playlistcontainer_release(sp_playlistcontainer pc);
+	int sp_playlistcontainer_get_unseen_tracks(sp_playlistcontainer pc, sp_playlist playlist, Pointer tracks, int num_tracks);
+	int sp_playlistcontainer_clear_unseen_tracks(sp_playlistcontainer pc, sp_playlist playlist);
+
 }
