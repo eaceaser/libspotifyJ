@@ -15,6 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.imageio.ImageIO;
 
 import libspotifyj.events.MusicDeliveryEventArgs;
+import libspotifyj.events.PrivateSessionModeChangedEventArgs;
 import libspotifyj.events.SessionEventArgs;
 import libspotifyj.events.SessionEventHandler;
 import libspotifyj.events.SpotifyEventHandler;
@@ -22,6 +23,7 @@ import libspotifyj.events.SpotifyEventItem;
 import libspotifyj.low.SpotifyJ;
 import libspotifyj.low.sp_albumbrowse;
 import libspotifyj.low.sp_artistbrowse;
+import libspotifyj.low.sp_audio_buffer_stats;
 import libspotifyj.low.sp_audioformat;
 import libspotifyj.low.sp_image;
 import libspotifyj.low.sp_search;
@@ -79,7 +81,7 @@ public class Session {
 	private SpotifyEventHandler startPlaybackHandler;
 	private SpotifyEventHandler stopPlaybackHandler;
 	private SpotifyEventHandler getAudioBufferStatsPlaybackHandler;
-	private SpotifyEventHandler offlineStatusUpdatesHandler;
+	private SpotifyEventHandler offlineStatusUpdatedHandler;
 	private SpotifyEventHandler offlineErrorHandler;
 	private SpotifyEventHandler credentialsBlobUpdatedHandler;
 	private SpotifyEventHandler connectionStateUpdatedHandler;
@@ -111,7 +113,7 @@ public class Session {
 			callbacks.start_playback = new StartPlaybackCallback();
 			callbacks.stop_playback = new StopPlaybackCallback();
 			callbacks.get_audio_buffer_stats = new GetAudioBufferStatsPlayback();
-			callbacks.offline_status_updated = new OfflineStatusUpdatesCallback();
+			callbacks.offline_status_updated = new OfflineStatusUpdatedCallback();
 			callbacks.offline_error = new OfflineErrorCallback();
 			callbacks.credentials_blob_updated = new CredentialsBlobUpdatedCallback();
 			callbacks.connectionstate_updated = new ConnectionStateUpdatedCallback();
@@ -379,8 +381,8 @@ public class Session {
     	this.getAudioBufferStatsPlaybackHandler = getAudioBufferStatsPlaybackHandler;
     }
     
-    public void setOfflineStatusUpdatesHandler(SessionEventHandler offlineStatusUpdatesHandler) {
-    	this.offlineStatusUpdatesHandler = offlineStatusUpdatesHandler;
+    public void setOfflineStatusUpdatedHandler(SessionEventHandler offlineStatusUpdatedHandler) {
+    	this.offlineStatusUpdatedHandler = offlineStatusUpdatedHandler;
     }
     
     public void setOfflineErrorHandler(SessionEventHandler offlineErrorHandler) {
@@ -748,7 +750,6 @@ public class Session {
 				return;
 			
 			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.endOfTrackHandler, s, new SessionEventArgs()));
-
 		}
 	}
 	
@@ -774,55 +775,79 @@ public class Session {
 	
 	private class StartPlaybackCallback implements Callback {
 		public void callback(sp_session session) {
-			System.out.println("startplayback() called");
+			//TODO: implement
 		}
 	}
 	
 	private class StopPlaybackCallback implements Callback {
 		public void callback(sp_session session) {
-			System.out.println("stopplayback() called");
+			//TODO: implement
 		}
 	}
 	
 	private class GetAudioBufferStatsPlayback implements Callback {
-		public void callback(sp_session session, PointerByReference stats) {
-			System.out.println("getaudiobuffer() called");
+		public void callback(sp_session session, sp_audio_buffer_stats stats) {
+			//TODO: implement
 		}
 	}
 	
-	private class OfflineStatusUpdatesCallback implements Callback {
+	private class OfflineStatusUpdatedCallback implements Callback {
 		public void callback(sp_session session) {
-			System.out.println("offlinestatus() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.offlineStatusUpdatedHandler, s, new SessionEventArgs()));
 		}
 	}
 	
 	private class OfflineErrorCallback implements Callback {
 		public void callback(sp_session session, int error) {
-			System.out.println("offlinerror() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.offlineErrorHandler, s, new SessionEventArgs(error)));
 		}
 	}
 	
 	private class CredentialsBlobUpdatedCallback implements Callback {
 		public void callback(sp_session session, String blob) {
-			System.out.println("credblob() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.credentialsBlobUpdatedHandler, s, new SessionEventArgs(blob)));
 		}
 	}
 	
 	private class ConnectionStateUpdatedCallback implements Callback {
 		public void callback(sp_session session) {
-			System.out.println("connstate() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.connectionStateUpdatedHandler, s, new SessionEventArgs()));
 		}
 	}
 	
 	private class ScrobbleErrorCallback implements Callback {
 		public void callback(sp_session session, int error) {
-			System.out.println("scrobberror() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.scrobbleErrorHandler, s, new SessionEventArgs(error)));
 		}
 	}
 	
 	private class PrivateSessionModeChangedCallback implements Callback {
-		public void callback(sp_session session, boolean is_private) {
-			System.out.println("privatesession() called");
+		public void callback(sp_session session, boolean isPrivate) {
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.privateSessionModeChangedHandler, s, new PrivateSessionModeChangedEventArgs(isPrivate)));
 		}
 	}
 	
