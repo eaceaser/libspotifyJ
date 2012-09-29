@@ -11,7 +11,9 @@ public class Track {
 	sp_track trackPtr;
 	
 	private boolean isLoaded = false;
+	private int offlineStatus = Constants.TRACK_OFFLINE_NO;
 	private int availability = Constants.TRACK_AVAILABILITY_UNAVAILABLE;
+	private boolean isLocal = false;
 	private int error = Constants.ERROR_RESOURCE_NOT_LOADED;
 	private Album album = null;
 	private Artist[] artists = null;
@@ -40,9 +42,12 @@ public class Track {
 			return;
 		
 		synchronized (SpotifyJ.lock) {
-			if (session != null)
+			if (session != null) {
 				availability = libspotify.sp_track_get_availability(session.sessionPtr, trackPtr);
+				isLocal = libspotify.sp_track_is_local(session.sessionPtr, trackPtr);
+			}
 			
+			offlineStatus = libspotify.sp_track_offline_get_status(trackPtr);
 			error = libspotify.sp_track_error(trackPtr);
 			
 			sp_album albumPtr = libspotify.sp_track_album(trackPtr);
@@ -87,6 +92,16 @@ public class Track {
 		return isLoaded;
 	}
 	
+	public boolean isLocal(Session session) {
+		checkLoaded(session);
+		return isLocal;
+	}
+	
+	public int getOfflineStatus() {
+		checkLoaded(null);
+		return offlineStatus;
+	}
+	
 	public boolean isStarred(Session session) {
 		checkLoaded(null);
 		synchronized (SpotifyJ.lock) {
@@ -94,8 +109,8 @@ public class Track {
 		}
 	}
 	
-	public int getAvailability() {
-		checkLoaded(null);
+	public int getAvailability(Session session) {
+		checkLoaded(session);
 		return availability;
 	}
 	
