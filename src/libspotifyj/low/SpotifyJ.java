@@ -199,4 +199,40 @@ public interface SpotifyJ extends Library {
 	int sp_search_total_playlists(sp_search search);
 	void sp_search_add_ref(sp_search search);
 	void sp_search_release(sp_search search);
+	
+	/* Playlist handling */
+	boolean sp_playlist_is_loaded(sp_playlist playlist);
+	int sp_playlist_add_callbacks(sp_playlist playlist, sp_playlist_callbacks callbacks, int userdata);
+	int sp_playlist_num_tracks(sp_playlist playlist);
+	sp_track sp_playlist_track(sp_playlist playlist, int index);
+	int sp_playlist_create_time(sp_playlist playlist, int index);
+	sp_user sp_playlist_track_creator(sp_playlist playlist, int index);
+	boolean sp_playlist_track_seen(sp_playlist playlist, int index);
+	int sp_playlist_set_seen(sp_playlist playlist, int index, boolean seen);
+	String sp_playlist_track_message(sp_playlist playlist, int index);
+	String sp_playlist_name(sp_playlist playlist);
+	int sp_playlist_rename(sp_playlist playlist, int new_name);
+	sp_user sp_playlist_owner(sp_playlist playlist);
+	boolean sp_playlist_is_collaborative(sp_playlist playlist);
+	int sp_playlist_set_collaborative(sp_playlist playlist, boolean collaborative);
+	int sp_playlist_set_autolink_tracks(sp_playlist playlist, boolean link);
+	String sp_playlist_get_description(sp_playlist playlist);
+	boolean sp_playlist_get_image(sp_playlist playlist, byte[] image);
+	boolean sp_playlist_has_pending_changes(sp_playlist playlist);
+	int sp_playlist_add_tracks(sp_playlist playlist, sp_track[] tracks, int num_tracks, int position, sp_session session);
+	int sp_playlist_remove_tracks(sp_playlist playlist, int[] tracks, int num_tracks);
+	int sp_playlist_reorder_tracks(sp_playlist playlist, int[] tracks, int num_tracks, int new_position);
+	int sp_playlist_num_subscribers(sp_playlist playlist);
+	sp_subscribers sp_playlist_subscribers(sp_playlist playlist);
+	int sp_playlist_subscribers_free(sp_subscribers subscribers);
+	int sp_playlist_update_subscribers(sp_session session, sp_playlist playlist);
+	boolean sp_playlist_is_in_ram(sp_session session, sp_playlist playlist);
+	int sp_playlist_set_in_ram(sp_session session, sp_playlist playlist, boolean in_ram);
+	sp_playlist sp_playlist_create(sp_session session, sp_link link);
+	int sp_playlist_set_offline_mode(sp_session session, sp_playlist playlist, boolean offline);
+	int sp_playlist_get_offline_status(sp_session session, sp_playlist playlist);
+	int sp_playlist_get_offline_download_completed(sp_session session, sp_playlist playlist);
+	int sp_playlist_add_ref(sp_playlist playlist);
+	int sp_playlist_release(sp_playlist playlist);
+	
 }

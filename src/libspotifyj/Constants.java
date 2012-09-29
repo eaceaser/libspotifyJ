@@ -131,6 +131,12 @@ public final class Constants {
 	public static final int SCROBBLING_STATE_GLOBAL_ENABLED			= 3;
 	public static final int SCROBBLING_STATE_GLOBAL_DISABLED 		= 4;
 	
+	/* Corresponds to sp_playlist_offline_status */
+	public static final int PLAYLIST_OFFLINE_STATUS_NO = 0;
+	public static final int PLAYLIST_OFFLINE_STATUS_YES = 1;
+	public static final int PLAYLIST_OFFLINE_STATUS_DOWNLOADING = 2;
+	public static final int PLAYLIST_OFFLINE_STATUS_WAITING = 3;
+	
 	private Constants() {}
 	
 }
