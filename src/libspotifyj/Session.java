@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.imageio.ImageIO;
 
+import libspotifyj.events.MusicDeliveryEventArgs;
 import libspotifyj.events.SessionEventArgs;
 import libspotifyj.events.SessionEventHandler;
 import libspotifyj.events.SpotifyEventHandler;
@@ -67,6 +68,23 @@ public class Session {
 	private SpotifyEventHandler logMessageHandler;
 	private SpotifyEventHandler loginHandler;
 	private SpotifyEventHandler logoutHandler;
+	private SpotifyEventHandler metaUpdatedHandler;
+	private SpotifyEventHandler connectionErrorHandler;
+	private SpotifyEventHandler messageToUserHandler;
+	private SpotifyEventHandler playTokenLostHandler;
+	private SpotifyEventHandler musicDeliveryHandler;
+	private SpotifyEventHandler endOfTrackHandler;
+	private SpotifyEventHandler streamingErrorHandler;
+	private SpotifyEventHandler userinfoUpdatedHandler;
+	private SpotifyEventHandler startPlaybackHandler;
+	private SpotifyEventHandler stopPlaybackHandler;
+	private SpotifyEventHandler getAudioBufferStatsPlaybackHandler;
+	private SpotifyEventHandler offlineStatusUpdatesHandler;
+	private SpotifyEventHandler offlineErrorHandler;
+	private SpotifyEventHandler credentialsBlobUpdatedHandler;
+	private SpotifyEventHandler connectionStateUpdatedHandler;
+	private SpotifyEventHandler scrobbleErrorHandler;
+	private SpotifyEventHandler privateSessionModeChangedHandler;
 	
 	/* State data */
 	private HashMap<Integer, Object> states = new HashMap<Integer, Object>();
@@ -315,6 +333,74 @@ public class Session {
     
     public void setLogoutHandler(SessionEventHandler logoutHandler) {
     	this.logoutHandler = logoutHandler;
+    }
+    
+    public void setMetaUpdatedHandler(SessionEventHandler metaUpdatedHandler) {
+    	this.metaUpdatedHandler = metaUpdatedHandler;
+    }
+    
+    public void setConnectionErrorHandler(SessionEventHandler connectionErrorHandler) {
+    	this.connectionErrorHandler = connectionErrorHandler;
+    }
+    
+    public void setMessageToUserHandler(SessionEventHandler messageToUserHandler) {
+    	this.messageToUserHandler = messageToUserHandler;
+    }
+    
+    public void setPlayTokenLostHandler(SessionEventHandler playTokenLostHandler) {
+    	this.playTokenLostHandler = playTokenLostHandler;
+    }
+    
+    public void setMusicDeliveryHandler(SessionEventHandler musicDeliveryHandler) {
+    	this.musicDeliveryHandler = musicDeliveryHandler;
+    }
+    
+    public void setEndOfTrackHandler(SessionEventHandler endOfTrackHandler) {
+    	this.endOfTrackHandler = endOfTrackHandler;
+    }
+    
+    public void setStreamingErrorHandler(SessionEventHandler streamingErrorHandler) {
+    	this.streamingErrorHandler = streamingErrorHandler;
+    }
+    
+    public void setUserinfoUpdatedHandler(SessionEventHandler userInfoupdatedHandler) {
+    	this.userinfoUpdatedHandler = userinfoUpdatedHandler;
+    }
+    
+    public void setStartPlaybackHandler(SessionEventHandler startPlaybackHandler) {
+    	this.startPlaybackHandler = startPlaybackHandler;
+    }
+    
+    public void setStopPlaybackHandler(SessionEventHandler stopPlaybackHandler) {
+    	this.stopPlaybackHandler = stopPlaybackHandler;
+    }
+    
+    public void setGetAudioBufferStatsPlaybackHandler(SessionEventHandler getAudioBufferStatsPlaybackHandler) {
+    	this.getAudioBufferStatsPlaybackHandler = getAudioBufferStatsPlaybackHandler;
+    }
+    
+    public void setOfflineStatusUpdatesHandler(SessionEventHandler offlineStatusUpdatesHandler) {
+    	this.offlineStatusUpdatesHandler = offlineStatusUpdatesHandler;
+    }
+    
+    public void setOfflineErrorHandler(SessionEventHandler offlineErrorHandler) {
+    	this.offlineErrorHandler = offlineErrorHandler;
+    }
+    
+    public void setCredentialsBlobUpdatedHandler(SessionEventHandler credentialsBlobUpdatedHandler) {
+    	this.credentialsBlobUpdatedHandler = credentialsBlobUpdatedHandler;
+    }
+    
+    public void setConnectionStateUpdatedHandler(SessionEventHandler credentialsBlobUpdatedHandler) {
+    	this.credentialsBlobUpdatedHandler = credentialsBlobUpdatedHandler;
+    }
+    
+    public void setScrobbleErrorHandler(SessionEventHandler scrobbleErrorHandler) {
+    	this.scrobbleErrorHandler = scrobbleErrorHandler;
+    }
+    
+    public void setPrivateSessionModeChangedHandler(SessionEventHandler privateSessionModeChangedHandler) {
+    	this.privateSessionModeChangedHandler = privateSessionModeChangedHandler;
     }
 	
 	/* Threads */
@@ -591,49 +677,98 @@ public class Session {
 	
 	private class MetadataUpdatedCallback implements Callback {
 		public void callback(sp_session session) {
-			System.out.println("metadata() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.metaUpdatedHandler, s, new SessionEventArgs()));
 		}
 	}
 	
 	private class ConnectionErrorCallback implements Callback {
 		public void callback(sp_session session, int error) {
-			System.out.println("conerror() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.connectionErrorHandler, s, new SessionEventArgs(error)));
 		}
 	}
 	
 	private class MessageToUserCallback implements Callback {
 		public void callback(sp_session session, String message) {
-			System.out.println("msgtouser() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.messageToUserHandler, s, new SessionEventArgs(message)));
 		}
 	}
 	
 	private class MusicDeliveryCallback implements Callback {
-		public void callback(sp_session session, sp_audioformat format, Pointer frames, int num_frames) {
-			System.out.println("musicdelivery() called");
+		public int callback(sp_session session, sp_audioformat format, Pointer frames, int numFrames) {
+			Session s = getSession(session);
+			if (s == null)
+				return 0;
+			
+			int consumed = 0;
+			byte[] sampleBytes = null;
+			
+			if (numFrames > 0) {
+				sampleBytes = new byte[numFrames * format.channels * 2];
+				sampleBytes = frames.getByteArray(0, sampleBytes.length);
+			} else {
+				sampleBytes = new byte[0];
+			}
+			
+			if (s.musicDeliveryHandler != null) {
+				MusicDeliveryEventArgs eventArgs = new MusicDeliveryEventArgs(format.channels, format.sample_rate, sampleBytes, numFrames);
+				s.musicDeliveryHandler.process(s, eventArgs);
+				consumed = eventArgs.getConsumedFrames();
+			}
+			
+			return consumed;
 		}
 	}
 	
 	private class PlayTokenLostCallback implements Callback {
 		public void callback(sp_session session) {
-			System.out.println("playtoken() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.playTokenLostHandler, s, new SessionEventArgs()));
 		}
 	}
 	
 	private class EndOfTrackCallback implements Callback {
 		public void callback(sp_session session) {
-			System.out.println("endoftrack() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.endOfTrackHandler, s, new SessionEventArgs()));
+
 		}
 	}
 	
 	private class StreamingErrorCallback implements Callback {
 		public void callback(sp_session session, int error) {
-			System.out.println("strerror() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.streamingErrorHandler, s, new SessionEventArgs(error)));
 		}
 	}
 	
 	private class UserInfoUpdatedCallback implements Callback {
 		public void callback(sp_session session) {
-			System.out.println("usrinfo() called");
+			Session s = getSession(session);
+			if (s == null)
+				return;
+			
+			s.enqueueSpotifyEventItem(new SpotifyEventItem(s.userinfoUpdatedHandler, s, new SessionEventArgs()));
 		}
 	}
 	
