@@ -18,6 +18,7 @@ import libspotifyj.events.SessionEventHandler;
 import libspotifyj.events.SpotifyEventHandler;
 import libspotifyj.events.SpotifyEventItem;
 import libspotifyj.low.SpotifyJ;
+import libspotifyj.low.sp_albumbrowse;
 import libspotifyj.low.sp_audioformat;
 import libspotifyj.low.sp_search;
 import libspotifyj.low.sp_session;
@@ -226,6 +227,27 @@ public class Session {
     	return search;
     }
     
+    public AlbumBrowse browseAlbum(Album album, long timeout) {
+    	ReentrantLock lock = new ReentrantLock();
+    	Condition waitHandler = lock.newCondition();
+    	SyncResponseData data = new SyncResponseData(lock, waitHandler);
+    	
+    	int id = getInternalStateId();
+    	
+    	synchronized (SpotifyJ.lock) {
+    		states.put(id, data);
+    		
+    		if (libspotify.sp_albumbrowse_create(sessionPtr, album.albumPtr, 
+    				new AlbumBrowseCompleteCallback(), id) == null) {
+    			states.remove(id);
+    			return null;
+    		}
+    	}
+    	
+    	AlbumBrowse albumBrowse = (AlbumBrowse) getSyncResponse(id, data, timeout);
+    	return albumBrowse;
+    }
+    
 	/* Spotify event handler setters */
     public void setLogMessageHandler(SessionEventHandler logMessageHandler) {
     	this.logMessageHandler = logMessageHandler;
@@ -423,6 +445,26 @@ public class Session {
 			
 			if (state != null && state instanceof SyncResponseData) {
 				states.put(userData, search);
+				ReentrantLock lock = ((SyncResponseData) state).lock;
+				Condition waitHandler = ((SyncResponseData) state).waitHandler;
+				
+				try {
+					lock.lock();
+					waitHandler.signal();
+				} finally {
+					lock.unlock();
+				}
+			}
+		}
+	}
+	
+	private class AlbumBrowseCompleteCallback implements Callback {
+		public void callback(sp_albumbrowse result, int userData) {
+			AlbumBrowse albumBrowse = new AlbumBrowse(result);
+			Object state = states.get(userData);
+			
+			if (state != null && state instanceof SyncResponseData) {
+				states.put(userData, albumBrowse);
 				ReentrantLock lock = ((SyncResponseData) state).lock;
 				Condition waitHandler = ((SyncResponseData) state).waitHandler;
 				

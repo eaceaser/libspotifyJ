@@ -8,7 +8,7 @@ import libspotifyj.low.sp_link;
 public class Album {
 	
 	private static SpotifyJ libspotify = SpotifyJ.libspotify;
-	private sp_album albumPtr;
+	sp_album albumPtr;
 		
 	Album(sp_album albumPtr) {
 		this.albumPtr = albumPtr;

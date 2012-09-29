@@ -132,6 +132,21 @@ public interface SpotifyJ extends Library {
 	void sp_artist_add_ref(sp_artist artist);
 	void sp_artist_release(sp_artist artist);
 	
+	/* Album browse handling */
+	sp_albumbrowse sp_albumbrowse_create(sp_session session, sp_album album, Callback callback, int user_data);
+	boolean sp_albumbrowse_is_loaded(sp_albumbrowse alb);
+	int sp_albumbrowse_error(sp_albumbrowse alb);
+	sp_album sp_albumbrowse_album(sp_albumbrowse alb);
+	sp_artist sp_albumbrowse_artist(sp_albumbrowse alb);
+	int sp_albumbrowse_num_copyrights(sp_albumbrowse alb);
+	String sp_albumbrowse_copyright(sp_albumbrowse alb, int index);
+	int sp_albumbrowse_num_tracks(sp_albumbrowse alb);
+	sp_track sp_albumbrowse_track(sp_albumbrowse alb, int index);
+	String sp_albumbrowse_review(sp_albumbrowse alb);
+	int sp_albumbrowse_backend_request_duration(sp_albumbrowse alb);
+	void sp_albumbrowse_add_ref(sp_albumbrowse alb);
+	void sp_albumbrowse_release(sp_albumbrowse alb);
+	
 	/* Search handling */
 	sp_search sp_search_create(sp_session session, String query, int track_offset, int track_count, int album_offset, int album_count, int artist_offset, int artist_count, int playlist_offset, int playlist_count, int search_type, Callback callback, int userdata);
 	boolean sp_search_is_loaded(sp_search search);

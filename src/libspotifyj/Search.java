@@ -26,6 +26,7 @@ public class Search {
 
 	Search(sp_search searchPtr) {
 		this.searchPtr = searchPtr;
+		
 		synchronized (SpotifyJ.lock) {
 			error = libspotify.sp_search_error(searchPtr);
 			
