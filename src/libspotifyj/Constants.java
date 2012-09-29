@@ -110,6 +110,11 @@ public final class Constants {
 	public static final int SEARCH_STANDARD = 0;
 	public static final int SEARCH_SUGGEST 	= 1;
 	
+	/* Corresponds to sp_artistbrowse_type */
+	public static final int ARTISTBROWSE_FULL 		= 0;
+	public static final int ARTISTBROWSE_NO_TRACKS 	= 1;
+	public static final int ARTISTBROWSE_NO_ALBUMS 	= 2;
+	
 	private Constants() {}
 	
 }

@@ -147,6 +147,26 @@ public interface SpotifyJ extends Library {
 	void sp_albumbrowse_add_ref(sp_albumbrowse alb);
 	void sp_albumbrowse_release(sp_albumbrowse alb);
 	
+	/* Artist browse handling */
+	sp_artistbrowse sp_artistbrowse_create(sp_session session, sp_artist artist, int type, Callback callback, int userdata);
+	boolean sp_artistbrowse_is_loaded(sp_artistbrowse arb);
+	int sp_artistbrowse_error(sp_artistbrowse arb);
+	sp_artist sp_artistbrowse_artist(sp_artistbrowse arb);
+	int sp_artistbrowse_num_portraits(sp_artistbrowse arb);
+	Pointer sp_artistbrowse_portrait(sp_artistbrowse arb, int index);
+	int sp_artistbrowse_num_tracks(sp_artistbrowse arb);
+	sp_track sp_artistbrowse_track(sp_artistbrowse arb, int index);
+	int sp_artistbrowse_num_tophit_tracks(sp_artistbrowse arb);
+	sp_track sp_artistbrowse_tophit_track(sp_artistbrowse arb, int index);
+	int sp_artistbrowse_num_albums(sp_artistbrowse arb);
+	sp_album sp_artistbrowse_album(sp_artistbrowse arb, int index);
+	int sp_artistbrowse_num_similar_artists(sp_artistbrowse arb);
+	sp_artist sp_artistbrowse_similar_artist(sp_artistbrowse arb, int index);
+	String sp_artistbrowse_biography(sp_artistbrowse arb);
+	int sp_artistbrowse_backend_request_duration(sp_artistbrowse arb);
+	void sp_artistbrowse_add_ref(sp_artistbrowse arb);
+	void sp_artistbrowse_release(sp_artistbrowse arb);
+	
 	/* Search handling */
 	sp_search sp_search_create(sp_session session, String query, int track_offset, int track_count, int album_offset, int album_count, int artist_offset, int artist_count, int playlist_offset, int playlist_count, int search_type, Callback callback, int userdata);
 	boolean sp_search_is_loaded(sp_search search);

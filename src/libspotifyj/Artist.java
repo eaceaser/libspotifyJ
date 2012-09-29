@@ -7,7 +7,7 @@ import libspotifyj.low.sp_link;
 public class Artist {
 
 	private static SpotifyJ libspotify = SpotifyJ.libspotify;
-	private sp_artist artistPtr;
+	sp_artist artistPtr;
 		
 	Artist(sp_artist artistPtr) {
 		this.artistPtr = artistPtr;

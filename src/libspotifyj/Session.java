@@ -19,6 +19,7 @@ import libspotifyj.events.SpotifyEventHandler;
 import libspotifyj.events.SpotifyEventItem;
 import libspotifyj.low.SpotifyJ;
 import libspotifyj.low.sp_albumbrowse;
+import libspotifyj.low.sp_artistbrowse;
 import libspotifyj.low.sp_audioformat;
 import libspotifyj.low.sp_search;
 import libspotifyj.low.sp_session;
@@ -248,6 +249,27 @@ public class Session {
     	return albumBrowse;
     }
     
+    public ArtistBrowse browseArtist(Artist artist, int browseType, long timeout) {
+    	ReentrantLock lock = new ReentrantLock();
+    	Condition waitHandler = lock.newCondition();
+    	SyncResponseData data = new SyncResponseData(lock, waitHandler);
+    	
+    	int id = getInternalStateId();
+    	
+    	synchronized (SpotifyJ.lock) {
+    		states.put(id, data);
+    		
+    		if (libspotify.sp_artistbrowse_create(sessionPtr, artist.artistPtr, browseType,
+    				new ArtistBrowseCompleteCallback(), id) == null) {
+    			states.remove(id);
+    			return null;
+    		}
+    	}
+    	
+    	ArtistBrowse artistBrowse = (ArtistBrowse) getSyncResponse(id, data, timeout);
+    	return artistBrowse;
+    }
+    
 	/* Spotify event handler setters */
     public void setLogMessageHandler(SessionEventHandler logMessageHandler) {
     	this.logMessageHandler = logMessageHandler;
@@ -465,6 +487,26 @@ public class Session {
 			
 			if (state != null && state instanceof SyncResponseData) {
 				states.put(userData, albumBrowse);
+				ReentrantLock lock = ((SyncResponseData) state).lock;
+				Condition waitHandler = ((SyncResponseData) state).waitHandler;
+				
+				try {
+					lock.lock();
+					waitHandler.signal();
+				} finally {
+					lock.unlock();
+				}
+			}
+		}
+	}
+	
+	private class ArtistBrowseCompleteCallback implements Callback {
+		public void callback(sp_artistbrowse result, int userData) {
+			ArtistBrowse artistBrowse = new ArtistBrowse(result);
+			Object state = states.get(userData);
+			
+			if (state != null && state instanceof SyncResponseData) {
+				states.put(userData, artistBrowse);
 				ReentrantLock lock = ((SyncResponseData) state).lock;
 				Condition waitHandler = ((SyncResponseData) state).waitHandler;
 				
