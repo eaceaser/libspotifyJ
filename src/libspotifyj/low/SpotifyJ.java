@@ -4,6 +4,7 @@ import com.sun.jna.Library;
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
+import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 
@@ -106,21 +107,27 @@ public interface SpotifyJ extends Library {
 	int sp_track_add_ref(sp_track track);
 	int sp_track_release(sp_track track);
 	
-	/* Album handling */
-	boolean sp_album_is_loaded(sp_album album);
-	boolean sp_album_is_available(sp_album album);
-	sp_artist sp_album_artist(sp_album album);
-	
 	/* User handling */
 	String sp_user_canonical_name(sp_user user);
 	String sp_user_display_name(sp_user user);
 	boolean sp_user_is_loaded(sp_user user);
-	int sp_user_add_ref(sp_user user);
-	int sp_user_release(sp_user user);
+	void sp_user_add_ref(sp_user user);
+	void sp_user_release(sp_user user);
+	
+	/* Album handling */
+	boolean sp_album_is_loaded(sp_album album);
+	boolean sp_album_is_available(sp_album album);
+	sp_artist sp_album_artist(sp_album album);
+	Pointer sp_album_cover(sp_album album);
+	String sp_album_name(sp_album album);
+	int sp_album_year(sp_album album);
+	int sp_album_type(sp_album album);
+	void sp_album_add_ref(sp_album album);
+	void sp_album_release(sp_album album);
 	
 	/* Artist handling */
 	String sp_artist_name(sp_artist artist);
 	boolean sp_artist_is_loaded(sp_artist artist);
-	int sp_artist_add_ref(sp_artist artist);
-	int sp_artist_release(sp_artist artist);
+	void sp_artist_add_ref(sp_artist artist);
+	void sp_artist_release(sp_artist artist);
 }
