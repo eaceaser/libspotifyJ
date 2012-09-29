@@ -115,6 +115,10 @@ public final class Constants {
 	public static final int ARTISTBROWSE_NO_TRACKS 	= 1;
 	public static final int ARTISTBROWSE_NO_ALBUMS 	= 2;
 	
+	/* Corresponds to sp_imageformat */
+	public static final int IMAGE_FORMAT_UNKNOWN 	= -1;
+	public static final int IMAGE_FORMAT_JPEG 		= 0;
+	
 	private Constants() {}
 	
 }

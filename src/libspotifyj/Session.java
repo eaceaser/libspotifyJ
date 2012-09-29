@@ -1,10 +1,8 @@
 package libspotifyj;
 
-import com.sun.jna.Callback;
-import com.sun.jna.Memory;
-import com.sun.jna.Pointer;
-import com.sun.jna.ptr.IntByReference;
-import com.sun.jna.ptr.PointerByReference;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -13,6 +11,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import javax.imageio.ImageIO;
+
 import libspotifyj.events.SessionEventArgs;
 import libspotifyj.events.SessionEventHandler;
 import libspotifyj.events.SpotifyEventHandler;
@@ -21,10 +22,17 @@ import libspotifyj.low.SpotifyJ;
 import libspotifyj.low.sp_albumbrowse;
 import libspotifyj.low.sp_artistbrowse;
 import libspotifyj.low.sp_audioformat;
+import libspotifyj.low.sp_image;
 import libspotifyj.low.sp_search;
 import libspotifyj.low.sp_session;
 import libspotifyj.low.sp_session_callbacks;
 import libspotifyj.low.sp_session_config;
+
+import com.sun.jna.Callback;
+import com.sun.jna.Memory;
+import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.ptr.PointerByReference;
 
 public class Session {
 	
@@ -268,6 +276,32 @@ public class Session {
     	
     	ArtistBrowse artistBrowse = (ArtistBrowse) getSyncResponse(id, data, timeout);
     	return artistBrowse;
+    }
+    
+    public BufferedImage loadImage(String id, long timeout) throws IOException {
+    	if (id == null || id.length() != 40)
+    		throw new IllegalArgumentException("Length of id must be 40");
+    	
+    	byte[] byteId = Util.stringToImageId(id);
+    	
+    	ReentrantLock lock = new ReentrantLock();
+    	Condition waitHandler = lock.newCondition();
+    	SyncResponseData data = new SyncResponseData(lock, waitHandler);
+    	
+    	int stateId = getInternalStateId();
+    	
+    	synchronized (SpotifyJ.lock) {
+    		states.put(stateId, data);
+    		
+    		sp_image imagePtr = libspotify.sp_image_create(sessionPtr, byteId);
+    		if (libspotify.sp_image_is_loaded(imagePtr))
+    			new ImageLoadedCallback().callback(imagePtr, stateId);
+    		else
+    			libspotify.sp_image_add_load_callback(imagePtr, new ImageLoadedCallback(), stateId);
+    	}
+    	System.out.println("testig");
+    	BufferedImage image = (BufferedImage) getSyncResponse(stateId, data, timeout);
+    	return image;
     }
     
 	/* Spotify event handler setters */
@@ -515,6 +549,31 @@ public class Session {
 					waitHandler.signal();
 				} finally {
 					lock.unlock();
+				}
+			}
+		}
+	}
+	
+	private class ImageLoadedCallback implements Callback {
+		public void callback(sp_image result, int userData) throws IOException {
+			Object state = states.get(userData);
+			
+			if (state != null && state instanceof SyncResponseData) {
+				ReentrantLock lock = ((SyncResponseData) state).lock;
+				Condition waitHandler = ((SyncResponseData) state).waitHandler;
+				
+				IntByReference size = new IntByReference();
+				Pointer data = libspotify.sp_image_data(result, size);
+				
+				byte[] imageData = data.getByteArray(0, size.getValue());
+				states.put(userData, ImageIO.read(new ByteArrayInputStream(imageData)));
+				
+				try {
+					lock.lock();
+					waitHandler.signal();
+				} finally {
+					lock.unlock();
+					libspotify.sp_image_release(result);
 				}
 			}
 		}

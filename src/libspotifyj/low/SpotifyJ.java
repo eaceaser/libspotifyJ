@@ -167,6 +167,16 @@ public interface SpotifyJ extends Library {
 	void sp_artistbrowse_add_ref(sp_artistbrowse arb);
 	void sp_artistbrowse_release(sp_artistbrowse arb);
 	
+	/* Image handling */
+	sp_image sp_image_create(sp_session session, byte[] image_id);
+	sp_image sp_image_create_from_link(sp_session session, sp_link l);
+	void sp_image_add_load_callback(sp_image image, Callback callback, int userdata);
+	boolean sp_image_is_loaded(sp_image image);
+	int sp_image_error(sp_image image);
+	Pointer sp_image_data(sp_image image, IntByReference data_size);
+	void sp_image_add_ref(sp_image image);
+	void sp_image_release(sp_image image);
+	
 	/* Search handling */
 	sp_search sp_search_create(sp_session session, String query, int track_offset, int track_count, int album_offset, int album_count, int artist_offset, int artist_count, int playlist_offset, int playlist_count, int search_type, Callback callback, int userdata);
 	boolean sp_search_is_loaded(sp_search search);
