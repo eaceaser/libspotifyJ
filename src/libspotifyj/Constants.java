@@ -119,6 +119,18 @@ public final class Constants {
 	public static final int IMAGE_FORMAT_UNKNOWN 	= -1;
 	public static final int IMAGE_FORMAT_JPEG 		= 0;
 	
+	/* Corresponds to sp_social_provider */
+	public static final int SOCIAL_PROVIDER_SPOTIFY = 0;
+	public static final int SOCIAL_PROVIDER_FACEBOOK = 1;
+	public static final int SOCIAL_PROVIDER_LASTFM = 2;
+	
+	/* Corresponds to sp_scrobbling_state */
+	public static final int SCROBBLING_STATE_USE_GLOBAL_SETTING 	= 0;
+	public static final int SCROBBLING_STATE_LOCAL_ENABLED		 	= 1;
+	public static final int SCROBBLING_STATE_LOCAL_DISABLED			= 2;
+	public static final int SCROBBLING_STATE_GLOBAL_ENABLED			= 3;
+	public static final int SCROBBLING_STATE_GLOBAL_DISABLED 		= 4;
+	
 	private Constants() {}
 	
 }

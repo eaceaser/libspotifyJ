@@ -8,7 +8,7 @@ import libspotifyj.low.sp_track;
 public class Track {
 
 	private static SpotifyJ libspotify = SpotifyJ.libspotify;
-	private sp_track trackPtr;
+	sp_track trackPtr;
 	
 	private boolean isLoaded = false;
 	private int availability = Constants.TRACK_AVAILABILITY_UNAVAILABLE;
@@ -28,7 +28,7 @@ public class Track {
 		}
 	}
 	 
-	private void checkLoaded(Session session) {
+	void checkLoaded(Session session) {
 		if (isLoaded)
 			return;
 		

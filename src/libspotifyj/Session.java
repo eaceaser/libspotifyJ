@@ -324,6 +324,140 @@ public class Session {
     	return image;
     }
     
+    public int playerLoad(Track track) {
+    	playerUnload();
+    	
+    	synchronized (SpotifyJ.lock) {
+    		int error = libspotify.sp_session_player_load(sessionPtr, track.trackPtr);
+    		if (error == Constants.ERROR_OK)
+    			track.checkLoaded(this);
+    		
+    		return error;
+    	}
+    }
+    
+    public void playerUnload() {
+    	synchronized (SpotifyJ.lock) {
+    		libspotify.sp_session_player_unload(sessionPtr);
+    	}
+    }
+    
+    public int playerSeek(int offset) {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_player_seek(sessionPtr, offset);
+    	}
+    }
+    
+    public int playerPlay(boolean play) {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_player_play(sessionPtr, play);
+    	}
+    }
+    
+    public int setCacheSize(long size) {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_set_cache_size(sessionPtr, size);
+    	}
+    }
+    
+    public int prefetchTrack(Track track) {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_player_prefetch(sessionPtr, track.trackPtr);
+    	}
+    }
+    
+    public int preferredBitrate(int bitrate) {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_preferred_bitrate(sessionPtr, bitrate);
+    	}
+    }
+    
+    public int preferredOfflineBitrate(int bitrate, boolean allowResync) {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_preferred_offline_bitrate(sessionPtr, bitrate, allowResync);
+    	}
+    }
+    
+    public boolean getVolumeNormalization() {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_get_volume_normalization(sessionPtr);
+    	}
+    }
+    
+    public int setVolumeNormalization(boolean on) {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_set_volume_normalization(sessionPtr, on);
+    	}
+    }
+    
+    public boolean isPrivateSession() {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_is_private_session(sessionPtr);
+    	}
+    }
+    
+    public int setPrivateSession(boolean enabled) {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_set_private_session(sessionPtr, enabled);
+    	}
+    }
+    
+    public int setScrobbling(int socialProvider, int scrobblingState) {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_set_scrobbling(sessionPtr, socialProvider, scrobblingState);
+    	}
+    }
+    
+    public int isScrobbling(int socialProvider) {
+    	synchronized (SpotifyJ.lock) {
+    		IntByReference state = new IntByReference(0);
+    		libspotify.sp_session_is_scrobbling(sessionPtr, socialProvider, state);
+    		return state.getValue();
+    	}
+    }
+    
+    public int setSocialCredentials(int socialProvider, String username, String password) {
+      	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_set_social_credentials(sessionPtr, socialProvider, username, password);
+    	}
+    }
+    
+    public int setConnectionType(int type) {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_set_connection_type(sessionPtr, type);
+    	}
+    }
+    
+    public int setConnectionRules(int rules) {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_set_connection_rules(sessionPtr, rules);
+    	}
+    }
+    
+    public int offlineTracksToSync() {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_offline_tracks_to_sync(sessionPtr);
+    	}
+    }
+    
+    public int offlineNumPlaylists() {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_offline_num_playlists(sessionPtr);
+    	}
+    }
+    
+    public int offlineTimeLeft() {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_offline_time_left(sessionPtr);
+    	}
+    }
+    
+    public int getCountryCode() {
+    	synchronized (SpotifyJ.lock) {
+    		return libspotify.sp_session_user_country(sessionPtr);
+    	}
+    }
+    
 	/* Spotify event handler setters */
     public void setLogMessageHandler(SessionEventHandler logMessageHandler) {
     	this.logMessageHandler = logMessageHandler;
@@ -365,7 +499,7 @@ public class Session {
     	this.streamingErrorHandler = streamingErrorHandler;
     }
     
-    public void setUserinfoUpdatedHandler(SessionEventHandler userInfoupdatedHandler) {
+    public void setUserinfoUpdatedHandler(SessionEventHandler userinfoUpdatedHandler) {
     	this.userinfoUpdatedHandler = userinfoUpdatedHandler;
     }
     
