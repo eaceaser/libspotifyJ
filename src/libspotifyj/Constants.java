@@ -100,6 +100,12 @@ public final class Constants {
 	public static final int TRACK_AVAILABILITY_NOT_STREAMABLE 	= 2;
 	public static final int TRACK_AVAILABILITY_BANNED_BY_ARTIST = 3;
 	
+	/* Corresponds to sp_albumtype */
+	public static final int ALBUMTYPE_ALBUM 		= 0;
+	public static final int ALBUMTYPE_SINGLE 		= 1;
+	public static final int ALBUMTYPE_COMPILATION 	= 2;
+	public static final int ALBUMTYPE_UNKNOWN 		= 3;
+	
 	private Constants() {}
 	
 }
