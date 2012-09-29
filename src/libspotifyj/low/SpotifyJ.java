@@ -1,5 +1,6 @@
 package libspotifyj.low;
 
+import com.sun.jna.Callback;
 import com.sun.jna.Library;
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
@@ -130,4 +131,27 @@ public interface SpotifyJ extends Library {
 	boolean sp_artist_is_loaded(sp_artist artist);
 	void sp_artist_add_ref(sp_artist artist);
 	void sp_artist_release(sp_artist artist);
+	
+	/* Search handling */
+	sp_search sp_search_create(sp_session session, String query, int track_offset, int track_count, int album_offset, int album_count, int artist_offset, int artist_count, int playlist_offset, int playlist_count, int search_type, Callback callback, Pointer userdata);
+	boolean sp_search_is_loaded(sp_search search);
+	int sp_search_error(sp_search search);
+	int sp_search_num_tracks(sp_search search);
+	sp_track sp_search_track(sp_search search, int index);
+	int sp_search_num_albums(sp_search search);
+	sp_album sp_search_album(sp_search search, int index);
+	int sp_search_num_playlists(sp_search search);
+	String sp_search_playlist_name(sp_search search, int index);
+	String sp_search_playlist_uri(sp_search search, int index);
+	String sp_search_playlist_image_uri(sp_search search, int index);
+	int sp_search_num_artists(sp_search search);
+	sp_artist sp_search_artist(sp_search search, int index);
+	String sp_search_query(sp_search search);
+	String sp_search_did_you_mean(sp_search search);
+	int sp_search_total_tracks(sp_search search);
+	int sp_search_total_albums(sp_search search);
+	int sp_search_total_artists(sp_search search);
+	int sp_search_total_playlists(sp_search search);
+	void sp_search_add_ref(sp_search search);
+	void sp_search_release(sp_search search);
 }
