@@ -169,28 +169,32 @@ public class Session {
 		return wasInterrupted ? loginCode : Constants.ERROR_OTHER_TRANSIENT;
     }
     
-    public void logout(long ms) {
+    public int logout(long ms) {
     	synchronized (SpotifyJ.lock) {
     		if (getConnectionState() == Constants.CONNECTIONSTATE_LOGGED_IN) {
     			int code = libspotify.sp_session_logout(sessionPtr);
     			if (code != Constants.ERROR_OK)
-    				return;
+    				return code;
     			else
         			userLoggedOut = logoutLock.newCondition();
     		} else {
-    			return;
+    			return Constants.ERROR_OTHER_TRANSIENT;
     		}
     	}
+    	
+    	boolean wasInterrupted = false;
     	    	
     	try {
     		logoutLock.lock();
-    		userLoggedOut.await(ms, TimeUnit.MILLISECONDS);
+    		wasInterrupted = userLoggedOut.await(ms, TimeUnit.MILLISECONDS);
     		userLoggedOut = null;
     	} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
     	} finally {
     		logoutLock.unlock();
     	}
+    	
+    	return wasInterrupted ? Constants.ERROR_OK : Constants.ERROR_OTHER_TRANSIENT;
     }
     
 	/* Spotify event handler setters */
