@@ -94,6 +94,14 @@ public class Album {
 		}
 	}
 	
+	public String toString() {
+		if (isLoaded()) {
+			return "Album: Artist = " + getArtist().getName() + ", Name = " + getName() + ", Year = " + getYear() + ", Link = " + createLink().toString(); 
+		} else {
+			return "Album: Not loaded";
+		}
+	}
+	
 	protected void finalize() {
 		if (albumPtr != null) {
 			synchronized (SpotifyJ.lock) {
