@@ -3,7 +3,7 @@ package libspotifyj.low;
 import com.sun.jna.Callback;
 import com.sun.jna.Structure;
 
-public class sp_playlist_callbacks extends Structure {
+public class sp_playlist_callbacks extends Structure implements Structure.ByReference {
 
 	public Callback tracks_added;
 	public Callback tracks_removed;

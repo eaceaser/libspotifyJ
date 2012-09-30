@@ -11,9 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
 import javax.imageio.ImageIO;
-
 import libspotifyj.events.MusicDeliveryEventArgs;
 import libspotifyj.events.PrivateSessionModeChangedEventArgs;
 import libspotifyj.events.SessionEventArgs;
@@ -30,7 +28,6 @@ import libspotifyj.low.sp_search;
 import libspotifyj.low.sp_session;
 import libspotifyj.low.sp_session_callbacks;
 import libspotifyj.low.sp_session_config;
-
 import com.sun.jna.Callback;
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
@@ -910,6 +907,7 @@ public class Session {
 	private class StartPlaybackCallback implements Callback {
 		public void callback(sp_session session) {
 			//TODO: implement
+			System.out.println("Starting playback");
 		}
 	}
 	

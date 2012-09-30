@@ -40,11 +40,11 @@ public interface SpotifyJ extends Library {
 	int sp_session_player_play(sp_session session, boolean play);
 	int sp_session_player_unload(sp_session session);
 	int sp_session_player_prefetch(sp_session session, sp_track track);
-	//sp_session_playlistcontainer(sp_session session);
-	//sp_session_inbox_create(sp_session session);
-	//sp_session_starred_create(sp_session session);
-	//sp_session_starred_for_user_create(sp_session session, String canonical_username);
-	//sp_session_publishedcontainer_for_user_create(sp_session session, String canonical_username);
+	sp_playlistcontainer sp_session_playlistcontainer(sp_session session);
+	sp_playlist sp_session_inbox_create(sp_session session);
+	sp_playlist sp_session_starred_create(sp_session session);
+	sp_playlist sp_session_starred_for_user_create(sp_session session, String canonical_username);
+	sp_playlist sp_session_publishedcontainer_for_user_create(sp_session session, String canonical_username);
 	int sp_session_preferred_bitrate(sp_session session, int bitrate);
 	int sp_session_preferred_offline_bitrate(sp_session session, int bitrate, boolean allow_resync);
 	boolean sp_session_get_volume_normalization(sp_session session);
@@ -203,6 +203,7 @@ public interface SpotifyJ extends Library {
 	/* Playlist handling */
 	boolean sp_playlist_is_loaded(sp_playlist playlist);
 	int sp_playlist_add_callbacks(sp_playlist playlist, sp_playlist_callbacks callbacks, int userdata);
+	int sp_playlist_remove_callbacks(sp_playlist playlist, sp_playlist_callbacks callbacks, int userdata);
 	int sp_playlist_num_tracks(sp_playlist playlist);
 	sp_track sp_playlist_track(sp_playlist playlist, int index);
 	int sp_playlist_create_time(sp_playlist playlist, int index);
@@ -211,7 +212,7 @@ public interface SpotifyJ extends Library {
 	int sp_playlist_set_seen(sp_playlist playlist, int index, boolean seen);
 	String sp_playlist_track_message(sp_playlist playlist, int index);
 	String sp_playlist_name(sp_playlist playlist);
-	int sp_playlist_rename(sp_playlist playlist, int new_name);
+	int sp_playlist_rename(sp_playlist playlist, String new_name);
 	sp_user sp_playlist_owner(sp_playlist playlist);
 	boolean sp_playlist_is_collaborative(sp_playlist playlist);
 	int sp_playlist_set_collaborative(sp_playlist playlist, boolean collaborative);
