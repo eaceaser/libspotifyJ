@@ -1,2 +1,3 @@
 libspotify C to Java bindings API
 
+Makes it possible to use the native libspotify library in your Java programs
