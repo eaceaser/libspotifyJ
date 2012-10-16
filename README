@@ -1,4 +1,4 @@
 libspotify C to Java bindings API using JNA (Java Native Access)
 
-Makes it possible to use the native libspotify library, used to gain access to Spotify functionality, 
-in your Java programs.
+Makes it possible to use the native libspotify library, used to gain access to Spotify functionality, in your Java programs.
+Currently supports libspotify API version 12.
