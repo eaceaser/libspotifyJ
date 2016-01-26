@@ -5,7 +5,7 @@ import com.sun.jna.Structure;
 
 public class sp_subscribers extends Structure {
 
-	public int count;
-	public Pointer subscribers;
-	
+  public int count;
+  public Pointer subscribers;
+
 }

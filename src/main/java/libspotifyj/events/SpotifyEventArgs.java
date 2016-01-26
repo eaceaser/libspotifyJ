@@ -1,3 +1,4 @@
 package libspotifyj.events;
 
-public interface SpotifyEventArgs {}
+public interface SpotifyEventArgs {
+}

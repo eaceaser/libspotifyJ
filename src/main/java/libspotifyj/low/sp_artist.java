@@ -5,12 +5,12 @@ import com.sun.jna.PointerType;
 
 public class sp_artist extends PointerType {
 
-    public sp_artist(Pointer address) {
-        super(address);
-    }
-	
-    public sp_artist() {
-        super();
-    }
-	
+  public sp_artist(Pointer address) {
+    super(address);
+  }
+
+  public sp_artist() {
+    super();
+  }
+
 }

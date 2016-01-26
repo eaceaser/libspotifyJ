@@ -5,12 +5,12 @@ import com.sun.jna.PointerType;
 
 public class sp_user extends PointerType {
 
-    public sp_user(Pointer address) {
-        super(address);
-    }
-	
-    public sp_user() {
-        super();
-    }
-	
+  public sp_user(Pointer address) {
+    super(address);
+  }
+
+  public sp_user() {
+    super();
+  }
+
 }
